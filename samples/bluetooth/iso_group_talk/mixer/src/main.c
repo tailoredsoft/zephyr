@@ -17,6 +17,9 @@
 #include <zephyr/bluetooth/conn.h>
 #include <zephyr/bluetooth/iso.h>
 #include <zephyr/sys/byteorder.h>
+#include <zephyr/settings/settings.h>
+
+#include "../../common/common.h"
 
 #define TIMEOUT_SYNC_CREATE K_SECONDS(10)
 #define NAME_LEN            30
@@ -332,6 +335,12 @@ int main(void)
 	if (err) {
 		printk("Bluetooth init failed (err %d)\n", err);
 		return 0;
+	}
+
+	/* Make it so that the same bdaddr is used on power up to make it
+	   more convenient when using a sniffer to check behvior */
+	if (IS_ENABLED(CONFIG_BT_SETTINGS)) {
+		settings_load();
 	}
 
 	printk("Scan callbacks register...");
