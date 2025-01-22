@@ -19,6 +19,8 @@
 #include <zephyr/sys/byteorder.h>
 #include <zephyr/settings/settings.h>
 
+#include "../../common/common.h"
+
 /* For normal operation, given the BIG creates 2 BISes, set the
    following mask to 0x3, otherwise have at least BIS1 to be transmitetd
    as that allows secondary devices to transmit in channels other than BIS1*/
@@ -48,18 +50,6 @@ static struct k_sem sem_chan_sent[CONFIG_BT_ISO_MAX_CHAN];
 
 #define INITIAL_TIMEOUT_COUNTER (BIG_TERMINATE_TIMEOUT_US / BIG_SDU_INTERVAL_US)
 
-/* If the size of the payload struct is increased, then increase the value
-   of the following configs by **at least** the value it has increased by
-   CONFIG_BT_ISO_TX_MTU  (in file proj.conf)
-   CONFIG_BT_CTLR_ISO_TX_BUFFER_SIZE (in file overlay-bt_ll_sw_split.conf)
-   CONFIG_BT_CTLR_ADV_ISO_PDU_LEN_MAX (in file overlay-bt_ll_sw_split.conf)
-   */
-struct app_bis_payload {
-	uint32_t    send_count;
-	uint8_t 	bis_index;  /* 1..N */
-	uint8_t 	padding[3];
-};
-
 struct app_src_context {
 	struct app_bis_payload app_bis_payload[BIS_ISO_CHAN_COUNT];
 	uint16_t 	seq_num;  /* HCI Packet Sequence number */
@@ -69,7 +59,7 @@ struct app_src_context {
 
 static struct app_src_context src_ctx;
 
-/* forward delare callback functions*/
+/* forward declare callback functions*/
 static void iso_big_connected(struct bt_iso_chan *chan);
 static void iso_big_disconnected(struct bt_iso_chan *chan, uint8_t reason);
 static void iso_bis_sent(struct bt_iso_chan *chan);
