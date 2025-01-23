@@ -28,7 +28,7 @@
 
 #define BIG_SDU_INTERVAL_US      (10000)
 #define BUF_ALLOC_TIMEOUT_US     (BIG_SDU_INTERVAL_US * 2U) /* milliseconds */
-#define BIG_TERMINATE_TIMEOUT_US (60 * 60 * USEC_PER_SEC) /* microseconds */
+#define BIG_TERMINATE_TIMEOUT_US (0 * 60 * 60 * USEC_PER_SEC) /* microseconds */
 #define MAX_BUF_ALLOC_COUNT      (CONFIG_BT_ISO_MAX_CHAN * CONFIG_BT_ISO_TX_BUFS_PER_CHAN)
 
 #define UNIQUE_NET_BUFS_PER_BIS  (1+1) /* +1 because PTO=1 in BIG - this will be assert checked
@@ -138,6 +138,7 @@ static void iso_big_connected(struct bt_iso_chan *chan)
 	}
 	printk("ISO ChanIdx %u connected\n", chan_idx);
 	src_ctx.seq_num = 0U;
+	src_ctx.iso_frame_count=0U;
 	k_sem_give(&sem_big_cmplt);
 }
 
@@ -451,20 +452,31 @@ int main(void)
 		return 0;
 	}
 
-	uint32_t bis_tx_enabled;;
 	while (true) {
-		bis_tx_enabled = 1;
-		for (uint8_t chan_idx = 0U; chan_idx < BIS_ISO_CHAN_COUNT; chan_idx++) {
-			if( bis_tx_enabled & GROUPTALK_BIS_ENABLE_MASK)
+
+		/* Send all appropriate BISes in the BIG */
+		uint32_t bis_tx_enabled=1;
+		bool lf_sent=false;
+		for (uint8_t chan_idx = 0U; chan_idx < BIS_ISO_CHAN_COUNT; chan_idx++ ) {
+			if( bis_tx_enabled & GROUPTALK_BIS_ENABLE_MASK){
 				/* only send in this bis channel if enabled */
 				if(!bis_channel_send(chan_idx)){
 					return 0;
 				}
+				/* print values */
+				if ((src_ctx.iso_frame_count % CONFIG_ISO_PRINT_INTERVAL) == 0) {
+					if(!lf_sent){
+						printk("\n(Channels %u) - [%u]:%u",BIS_ISO_CHAN_COUNT,
+						                                (chan_idx+1),
+														src_ctx.app_bis_payload[chan_idx].send_count);
+						lf_sent = true;
+					} else {
+						printk(", [%u]:%u",(chan_idx+1),
+						                   src_ctx.app_bis_payload[chan_idx].send_count);
+					}
+				}
+			}
 			bis_tx_enabled<<=1;
-		}
-
-		if ((src_ctx.iso_frame_count % CONFIG_ISO_PRINT_INTERVAL) == 0) {
-			printk("Sending value %u\n", src_ctx.iso_frame_count);
 		}
 
 		src_ctx.iso_frame_count++;
