@@ -350,6 +350,7 @@ static bool bis_channel_send(uint8_t chan_idx)
 	}
 
 	src_ctx.app_bis_payload[chan_idx].send_count++;
+	src_ctx.app_bis_payload[chan_idx].src_id = 1; /* Primary */
 
 	net_buf_reserve(buf, BT_ISO_CHAN_SEND_RESERVE);
 	net_buf_add_mem(buf, &src_ctx.app_bis_payload[chan_idx], sizeof(struct app_bis_payload));  /* a memcpy will happen to put copy into the buffer */

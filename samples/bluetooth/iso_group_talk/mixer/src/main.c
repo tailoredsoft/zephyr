@@ -321,34 +321,18 @@ static void iso_bis_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info
 	} 
 
 	if ((iso_recv_bis1_count % CONFIG_ISO_PRINT_INTERVAL) == 0) {
+		/* print [n,m]:count
+		      where n is the BIS index 1..N
+			  m is the source id 1=Primary, 2=Mixer, 10..99=Secondary
+			  count is the number of packets sent as per the payload
+		*/
 		struct app_bis_payload *payload = (struct app_bis_payload *)buf->data;
 		if(chan_idx==0){
-			printk("\n[1]:%u", payload->send_count);
+			printk("\n[1,%u]:%u", payload->src_id, payload->send_count);
 		} else {
-			printk(", [%u]:%u", payload->bis_index,payload->send_count);
+			printk(", [%u,%u]:%u", payload->bis_index, payload->src_id, payload->send_count);
 		}
 	}
-	
-#if 0	
-	char data_str[128];
-	size_t str_len;
-	uint32_t count = 0;
-	if (buf->len == sizeof(struct app_bis_payload)) {
-		count = sys_get_le32(buf->data);
-		if (IS_ENABLED(CONFIG_ISO_ALIGN_PRINT_INTERVALS)) {
-			iso_recv_count = count;
-		}
-	}
-
-	if ((iso_recv_count % CONFIG_ISO_PRINT_INTERVAL) == 0) {
-		str_len = bin2hex(buf->data, buf->len, data_str, sizeof(data_str));
-		printk("Incoming data channel %p flags 0x%x seq_num %u ts %u len %u: "
-		       "%s (counter value %u)\n", chan, info->flags, info->seq_num,
-		       info->ts, buf->len, data_str, count);
-	}
-
-	iso_recv_count++;
-#endif
 }
 
 int main(void)

@@ -25,7 +25,8 @@ extern "C" {
 struct app_bis_payload {
 	uint32_t    send_count;
 	uint8_t 	bis_index;  /* 1..N */
-	uint8_t 	padding[3];
+   uint8_t     src_id;  /* 1=Primary,2=Mixer, 10..99=Secondary */
+	uint8_t 	padding[2];
 };
 
 /* number of BISes in the BIG */
