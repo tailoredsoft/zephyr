@@ -24,7 +24,7 @@
 /* For normal operation, given the BIG creates 2 BISes, set the
    following mask to 0x3, otherwise have at least BIS1 to be transmitetd
    as that allows secondary devices to transmit in channels other than BIS1*/
-#define GROUPTALK_BIS_ENABLE_MASK  (0x03)
+#define GROUPTALK_BIS_ENABLE_MASK  (0x01)
 
 #define BIG_SDU_INTERVAL_US      (10000)
 #define BUF_ALLOC_TIMEOUT_US     (BIG_SDU_INTERVAL_US * 2U) /* milliseconds */
