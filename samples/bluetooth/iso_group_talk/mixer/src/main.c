@@ -316,7 +316,10 @@ static void iso_bis_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info
 	}
 
 	if (buf->len != sizeof(struct app_bis_payload)) {
-		printk("Invalid Payload length %u\n", buf->len);
+		/* apart from BIS1 we are expecting no packets in all other BISes */
+		if(chan_idx==0){
+			printk("Invalid Payload length %u\n", buf->len);
+		}
 		return;
 	} 
 
