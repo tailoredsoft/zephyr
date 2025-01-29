@@ -1,7 +1,7 @@
 sample:
-  name: Bluetooth ISO Broadcaster Mixer
+  name: Bluetooth ISO Broadcaster Secondary
 tests:
-  sample.bluetooth.iso_bcast_mixer:
+  sample.bluetooth.iso_bcast_secondary:
     harness: bluetooth
     platform_allow:
       - qemu_cortex_m3
@@ -11,7 +11,7 @@ tests:
     integration_platforms:
       - qemu_cortex_m3
     tags: bluetooth
-  sample.bluetooth.iso_bcast_mixer.bt_ll_sw_split:
+  sample.bluetooth.iso_bcast_secondary.bt_ll_sw_split:
     harness: bluetooth
     platform_allow:
       - qemu_cortex_m3

@@ -13,7 +13,7 @@ set(EXTRA_CONF_FILE
 )
 
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
-project(iso_broadcast)
+project(iso_grouptalk_primary)
 
 target_sources(app PRIVATE 
     src/main.c
