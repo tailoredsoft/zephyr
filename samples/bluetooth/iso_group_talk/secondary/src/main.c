@@ -324,16 +324,16 @@ static void iso_bis_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info
 	} 
 
 	if ((iso_recv_bis1_count % CONFIG_ISO_PRINT_INTERVAL) == 0) {
-		/* print [n,m]:count
+		/* print n:[m,count]
 		      where n is the BIS index 1..N
 			  m is the source id 1=Primary, 2=Mixer, 10..99=Secondary
 			  count is the number of packets sent as per the payload
 		*/
 		struct app_bis_payload *payload = (struct app_bis_payload *)buf->data;
 		if(chan_idx==0){
-			printk("\n[1,%u]:%u", payload->src_id, payload->send_count);
+			printk("\n1:[%u,%u]", payload->src_id, payload->send_count);
 		} else {
-			printk(", [%u,%u]:%u", payload->bis_index, payload->src_id, payload->send_count);
+			printk(", %u:[%u,%u]", payload->bis_index, payload->src_id, payload->send_count);
 		}
 	}
 }
