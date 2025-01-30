@@ -467,13 +467,15 @@ int main(void)
 				/* print values */
 				if ((src_ctx.iso_frame_count % CONFIG_ISO_PRINT_INTERVAL) == 0) {
 					if(!lf_sent){
-						printk("\n(Channels %u) - [%u]:%u",BIS_ISO_CHAN_COUNT,
+						printk("\nP(%u)> %u:[%u,%u]",BIS_ISO_CHAN_COUNT,
 						                                (chan_idx+1),
+														src_ctx.app_bis_payload[chan_idx].src_id, 
 														src_ctx.app_bis_payload[chan_idx].send_count);
 						lf_sent = true;
 					} else {
-						printk(", [%u]:%u",(chan_idx+1),
-						                   src_ctx.app_bis_payload[chan_idx].send_count);
+						printk(", %u:[%u,%u]",(chan_idx+1),
+											src_ctx.app_bis_payload[chan_idx].src_id, 
+						                   	src_ctx.app_bis_payload[chan_idx].send_count);
 					}
 				}
 			}
