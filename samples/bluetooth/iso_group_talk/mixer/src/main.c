@@ -303,7 +303,7 @@ static void iso_bis_disconnected(struct bt_iso_chan *chan, uint8_t reason)
 static void iso_bis_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info *info,
 		struct net_buf *buf)
 {
-	uint8_t chan_idx = get_bis_chan_idx(chan);
+	int8_t chan_idx = get_bis_chan_idx(chan);
 
 	/* Increment count only if we received BIS1*/
 	if(chan_idx==0){

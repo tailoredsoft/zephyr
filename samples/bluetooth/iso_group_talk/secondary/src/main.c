@@ -285,15 +285,28 @@ static int8_t get_bis_chan_idx(struct bt_iso_chan *chan)
 
 static void iso_bis_connected(struct bt_iso_chan *chan)
 {
-	printk("ISO Channel %p connected\n", chan);
+	int8_t chan_idx = get_bis_chan_idx(chan);
+
+	if(chan_idx < 0) {
+		printk("Invalid BIS channel %p\n", chan);
+		return;
+	}
+	printk("ISO Channel %u connected\n", chan_idx);
+
 	iso_recv_bis1_count=0;
 	k_sem_give(&sem_big_sync);
 }
 
 static void iso_bis_disconnected(struct bt_iso_chan *chan, uint8_t reason)
 {
-	printk("ISO Channel %p disconnected with reason 0x%02x\n",
-	       chan, reason);
+	int8_t chan_idx = get_bis_chan_idx(chan);
+
+	if(chan_idx < 0) {
+		printk("Invalid BIS channel %p\n", chan);
+		return;
+	}
+	printk("ISO Channel %u disconnected with reason 0x%02x\n",
+	       chan_idx, reason);
 
 	if (reason != BT_HCI_ERR_OP_CANCELLED_BY_HOST) {
 		k_sem_give(&sem_big_sync_lost);
@@ -303,7 +316,7 @@ static void iso_bis_disconnected(struct bt_iso_chan *chan, uint8_t reason)
 static void iso_bis_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info *info,
 		struct net_buf *buf)
 {
-	uint8_t chan_idx = get_bis_chan_idx(chan);
+	int8_t chan_idx = get_bis_chan_idx(chan);
 
 	/* Increment count only if we received BIS1*/
 	if(chan_idx==0){
