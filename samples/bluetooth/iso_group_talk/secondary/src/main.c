@@ -229,11 +229,13 @@ static void iso_bis_disconnected(struct bt_iso_chan *chan, uint8_t reason);
 static void iso_bis_recv(struct bt_iso_chan *chan, 
                          const struct bt_iso_recv_info *info,
 		                 struct net_buf *buf);
+static void iso_bis_sent(struct bt_iso_chan *chan);
 
 static struct bt_iso_chan_ops iso_ops = {
 	.recv		    = iso_bis_recv,
 	.connected	    = iso_bis_connected,
 	.disconnected	= iso_bis_disconnected,
+	.sent           = iso_bis_sent,
 };
 
 static struct bt_iso_chan_io_qos iso_rx_qos[BIS_ISO_CHAN_COUNT];
@@ -350,6 +352,18 @@ static void iso_bis_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info
 		}
 	}
 }
+
+static void iso_bis_sent(struct bt_iso_chan *chan)
+{
+	int8_t chan_idx = get_bis_chan_idx(chan);
+	if(chan_idx < 0) {
+		printk("Invalid BIS channel %p\n", chan);
+		return;
+	}
+	//k_sem_give(&sem_chan_sent[chan_idx]);  //HACK-MJT
+}
+
+
 
 int main(void)
 {
@@ -498,7 +512,11 @@ big_sync_create:
 		}
 		printk("success.\n");
 
+#ifdef CONFIG_GROUPTALK_SECONDARY
+		for (uint8_t chan = 0U; chan < 1; chan++) {
+#else
 		for (uint8_t chan = 0U; chan < BIS_ISO_CHAN_COUNT; chan++) {
+#endif			
 			printk("Waiting for BIG sync chan %u...\n", chan);
 			err = k_sem_take(&sem_big_sync, TIMEOUT_SYNC_CREATE);
 			if (err) {

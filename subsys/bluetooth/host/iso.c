@@ -2758,8 +2758,15 @@ static int big_init_bis(struct bt_iso_big *big, struct bt_iso_chan **bis_channel
 		iso_conn = &bis->iso->iso;
 
 		iso_conn->big_handle = big->handle;
+#ifdef CONFIG_GROUPTALK_SECONDARY
+		/* In a group-talk secondary device it shall always listen on BIS1
+		   and may only transmit in the rest of the BIS channles */
+		iso_conn->info.type =
+			(i>0) ? BT_ISO_CHAN_TYPE_BROADCASTER : BT_ISO_CHAN_TYPE_SYNC_RECEIVER;
+#else		
 		iso_conn->info.type =
 			broadcaster ? BT_ISO_CHAN_TYPE_BROADCASTER : BT_ISO_CHAN_TYPE_SYNC_RECEIVER;
+#endif			
 		iso_conn->bis_id = bt_conn_index(bis->iso);
 
 		bt_iso_chan_add(bis->iso, bis);
