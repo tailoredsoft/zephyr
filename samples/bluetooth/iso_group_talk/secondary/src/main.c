@@ -21,6 +21,14 @@
 
 #include "../../common/common.h"
 
+
+#ifndef CONFIG_GROUPTALK_COMMON
+#error "CONFIG_GROUPTALK_COMMON=y has not been defined in proj.conf"
+#endif
+#ifndef CONFIG_GROUPTALK_SECONDARY
+#error "CONFIG_GROUPTALK_SECONDARY=y has not been defined in proj.conf"
+#endif
+
 #define TIMEOUT_SYNC_CREATE K_SECONDS(10)
 #define NAME_LEN            30
 
@@ -238,16 +246,28 @@ static struct bt_iso_chan_ops iso_ops = {
 	.sent           = iso_bis_sent,
 };
 
-static struct bt_iso_chan_io_qos iso_rx_qos[BIS_ISO_CHAN_COUNT];
+/* In group-talk secondary. BIS1 is always receive and the rest are transmit */
+static struct bt_iso_chan_io_qos iso_rx_qos;
+static struct bt_iso_chan_io_qos iso_tx_qos = {
+	.sdu = sizeof(struct app_bis_payload), /* bytes */
+	.rtn = 1,
+	.phy = BT_GAP_LE_PHY_2M,
+};
 
-static struct bt_iso_chan_qos bis_iso_qos[] = {
-	{ .rx = &iso_rx_qos[0], },
-	{ .rx = &iso_rx_qos[1], },
+static struct bt_iso_chan_qos bis_iso_qos_rx = {
+	.rx = &iso_rx_qos,
+};
+
+static struct bt_iso_chan_qos bis_iso_qos_tx = {
+	.tx = &iso_tx_qos,
 };
 
 static struct bt_iso_chan bis_iso_chan[] = {
-	{ .ops = &iso_ops, .qos = &bis_iso_qos[0], },
-	{ .ops = &iso_ops, .qos = &bis_iso_qos[1], },
+	/* BIS1 is always rx */
+	{ .index=0, .ops = &iso_ops, .qos = &bis_iso_qos_rx,},
+	
+	/* BIS2 .. BISN is always tx or silent*/
+	{ .index=1, .ops = &iso_ops, .qos = &bis_iso_qos_tx,},
 };
 
 static struct bt_iso_chan *bis[] = {

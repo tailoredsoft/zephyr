@@ -24,3 +24,21 @@ config ISO_BLINK_LED0
 	depends on $(dt_alias_enabled,led0)
 	select GPIO
 	default y
+
+config GROUPTALK_COMMON
+    bool "Enable common code specific to the grouptalk feature devices"
+    default n
+	help
+	  When enabled, additional features and modifications shared by all
+	  grouptalk devices will be compiled into the project. This option can
+	  blocks guarded by `#ifdef CONFIG_GROUPTALK_COMMON` in shared .c
+	  and .h files.
+
+config GROUPTALK_MIXER
+    bool "Enable code specific to the grouptalk mixer device"
+    default n
+	help
+	  When enabled, additional features and modifications will be compiled
+	  into the project. This option can be used to include or exclude code
+	  blocks guarded by `#ifdef CONFIG_GROUPTALK_MIXER` in shared .c
+	  and .h files.

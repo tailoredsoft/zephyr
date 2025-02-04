@@ -11,3 +11,21 @@ config ISO_PRINT_INTERVAL
 	default 1
 	help
 	  Only print the packet report once in a given interval of ISO packets.
+
+config GROUPTALK_COMMON
+    bool "Enable common code specific to the grouptalk feature devices"
+    default n
+	help
+	  When enabled, additional features and modifications shared by all
+	  grouptalk devices will be compiled into the project. This option can
+	  blocks guarded by `#ifdef CONFIG_GROUPTALK_COMMON` in shared .c
+	  and .h files.
+
+config GROUPTALK_PRIMARY
+    bool "Enable code specific to the grouptalk primary device"
+    default n
+	help
+	  When enabled, additional features and modifications will be compiled
+	  into the project. This option can be used to include or exclude code
+	  blocks guarded by `#ifdef CONFIG_GROUPTALK_PRIMARY` in shared .c
+	  and .h files.

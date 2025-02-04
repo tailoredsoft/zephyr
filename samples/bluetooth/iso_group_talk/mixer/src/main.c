@@ -21,6 +21,14 @@
 
 #include "../../common/common.h"
 
+
+#ifndef CONFIG_GROUPTALK_COMMON
+#error "CONFIG_GROUPTALK_COMMON=y has not been defined in proj.conf"
+#endif
+#ifndef CONFIG_GROUPTALK_MIXER
+#error "CONFIG_GROUPTALK_MIXER=y has not been defined in proj.conf"
+#endif
+
 #define TIMEOUT_SYNC_CREATE K_SECONDS(10)
 #define NAME_LEN            30
 

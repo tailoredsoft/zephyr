@@ -21,6 +21,14 @@
 
 #include "../../common/common.h"
 
+
+#ifndef CONFIG_GROUPTALK_COMMON
+#error "CONFIG_GROUPTALK_COMMON=y has not been defined in proj.conf"
+#endif
+#ifndef CONFIG_GROUPTALK_PRIMARY
+#error "CONFIG_GROUPTALK_PRIMARY=y has not been defined in proj.conf"
+#endif
+
 /* For normal operation, given the BIG creates 2 BISes, set the
    following mask to 0x3, otherwise have at least BIS1 to be transmitetd
    as that allows secondary devices to transmit in channels other than BIS1*/
