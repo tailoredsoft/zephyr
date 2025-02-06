@@ -25,20 +25,20 @@ config ISO_BLINK_LED0
 	select GPIO
 	default y
 
-config GROUPTALK_COMMON
-    bool "Enable common code specific to the grouptalk feature devices"
+config GULUTALK_COMMON
+    bool "Enable common code specific to the gulutalk feature devices"
     default n
 	help
 	  When enabled, additional features and modifications shared by all
-	  grouptalk devices will be compiled into the project. This option can
-	  blocks guarded by `#ifdef CONFIG_GROUPTALK_COMMON` in shared .c
+	  gulutalk devices will be compiled into the project. This option can
+	  blocks guarded by `#ifdef CONFIG_GULUTALK_COMMON` in shared .c
 	  and .h files.
 
-config GROUPTALK_MIXER
-    bool "Enable code specific to the grouptalk mixer device"
+config GULUTALK_MIXER
+    bool "Enable code specific to the gulutalk mixer device"
     default n
 	help
 	  When enabled, additional features and modifications will be compiled
 	  into the project. This option can be used to include or exclude code
-	  blocks guarded by `#ifdef CONFIG_GROUPTALK_MIXER` in shared .c
+	  blocks guarded by `#ifdef CONFIG_GULUTALK_MIXER` in shared .c
 	  and .h files.

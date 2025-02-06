@@ -5,7 +5,7 @@
  */
 
 /*************************/
-/* Group Talk Feature    */
+/* Gulu Talk Feature     */
 /* --------------------- */
 /* ISO Broadcast Primary */
 /*************************/
@@ -22,17 +22,17 @@
 #include "../../common/common.h"
 
 
-#ifndef CONFIG_GROUPTALK_COMMON
-#error "CONFIG_GROUPTALK_COMMON=y has not been defined in proj.conf"
+#ifndef CONFIG_GULUTALK_COMMON
+#error "CONFIG_GULUTALK_COMMON=y has not been defined in proj.conf"
 #endif
-#ifndef CONFIG_GROUPTALK_PRIMARY
-#error "CONFIG_GROUPTALK_PRIMARY=y has not been defined in proj.conf"
+#ifndef CONFIG_GULUTALK_PRIMARY
+#error "CONFIG_GULUTALK_PRIMARY=y has not been defined in proj.conf"
 #endif
 
 /* For normal operation, given the BIG creates 2 BISes, set the
    following mask to 0x3, otherwise have at least BIS1 to be transmitetd
    as that allows secondary devices to transmit in channels other than BIS1*/
-#define GROUPTALK_BIS_ENABLE_MASK  (0x01)
+#define GULUTALK_BIS_ENABLE_MASK  (0x01)
 
 #define BIG_SDU_INTERVAL_US      (10000)
 #define BUF_ALLOC_TIMEOUT_US     (BIG_SDU_INTERVAL_US * 2U) /* milliseconds */
@@ -467,7 +467,7 @@ int main(void)
 		uint32_t bis_tx_enabled=1;
 		bool lf_sent=false;
 		for (uint8_t chan_idx = 0U; chan_idx < BIS_ISO_CHAN_COUNT; chan_idx++ ) {
-			if( bis_tx_enabled & GROUPTALK_BIS_ENABLE_MASK){
+			if( bis_tx_enabled & GULUTALK_BIS_ENABLE_MASK){
 				/* only send in this bis channel if enabled */
 				if(!bis_channel_send(chan_idx)){
 					return 0;

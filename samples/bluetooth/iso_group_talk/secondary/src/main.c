@@ -5,7 +5,7 @@
  */
 
 /***************************/
-/* Group Talk Feature      */
+/* Gulu Talk Feature       */
 /* ----------------------- */
 /* ISO Broadcast Secondary */
 /***************************/
@@ -22,11 +22,11 @@
 #include "../../common/common.h"
 
 
-#ifndef CONFIG_GROUPTALK_COMMON
-#error "CONFIG_GROUPTALK_COMMON=y has not been defined in proj.conf"
+#ifndef CONFIG_GULUTALK_COMMON
+#error "CONFIG_GULUTALK_COMMON=y has not been defined in proj.conf"
 #endif
-#ifndef CONFIG_GROUPTALK_SECONDARY
-#error "CONFIG_GROUPTALK_SECONDARY=y has not been defined in proj.conf"
+#ifndef CONFIG_GULUTALK_SECONDARY
+#error "CONFIG_GULUTALK_SECONDARY=y has not been defined in proj.conf"
 #endif
 
 #define TIMEOUT_SYNC_CREATE K_SECONDS(10)
@@ -246,7 +246,7 @@ static struct bt_iso_chan_ops iso_ops = {
 	.sent           = iso_bis_sent,
 };
 
-/* In group-talk secondary. BIS1 is always receive and the rest are transmit */
+/* In gulutalk secondary. BIS1 is always receive and the rest are transmit */
 static struct bt_iso_chan_io_qos iso_rx_qos;
 static struct bt_iso_chan_io_qos iso_tx_qos = {
 	.sdu = sizeof(struct app_bis_payload), /* bytes */
@@ -532,7 +532,7 @@ big_sync_create:
 		}
 		printk("success.\n");
 
-#ifdef CONFIG_GROUPTALK_SECONDARY
+#ifdef CONFIG_GULUTALK_SECONDARY
 		for (uint8_t chan = 0U; chan < 1; chan++) {
 #else
 		for (uint8_t chan = 0U; chan < BIS_ISO_CHAN_COUNT; chan++) {

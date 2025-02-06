@@ -6,7 +6,7 @@
  */
 
 /**************************************/
-/* Group Talk Feature : Common        */
+/* GuluTalk Feature : Common          */
 /*  Shared by primary/mixer/secondary */
 /**************************************/
 

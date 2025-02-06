@@ -209,7 +209,7 @@ struct bt_iso_chan {
 	/** @internal Node used internally by the stack */
 	sys_snode_t node;
 
-#ifdef CONFIG_GROUPTALK_SECONDARY
+#ifdef CONFIG_GULUTALK_SECONDARY
 	/** @internal Channel index */
 	uint8_t index;    /* 0..N, so BIS index will be index+1*/
 #endif	
