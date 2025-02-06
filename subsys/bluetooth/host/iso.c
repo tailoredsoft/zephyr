@@ -3525,10 +3525,32 @@ int bt_iso_big_sync(struct bt_le_per_adv_sync *sync, struct bt_iso_big_sync_para
 			return -EINVAL;
 		}
 
+#ifdef CONFIG_GROUPTALK_SECONDARY
+		if(i==0){
+			CHECKIF(param_bis->qos->rx == NULL) {
+				LOG_DBG("bis_channels[%u]: qos->rx is NULL", i);
+				return -EINVAL;
+			}
+			CHECKIF(param_bis->qos->tx != NULL) {
+				LOG_DBG("bis_channels[%u]: qos->tx is not NULL", i);
+				return -EINVAL;
+			}
+		} else {
+			CHECKIF(param_bis->qos->rx != NULL) {
+				LOG_DBG("bis_channels[%u]: qos->rx is not NULL", i);
+				return -EINVAL;
+			}
+			CHECKIF(param_bis->qos->tx == NULL) {
+				LOG_DBG("bis_channels[%u]: qos->tx not NULL", i);
+				return -EINVAL;
+			}
+		}
+#else
 		CHECKIF(param_bis->qos->rx == NULL) {
 			LOG_DBG("bis_channels[%u]: qos->rx is NULL", i);
 			return -EINVAL;
 		}
+#endif			
 	}
 
 	big = get_free_big();
