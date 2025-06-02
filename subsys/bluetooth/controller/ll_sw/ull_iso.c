@@ -214,6 +214,9 @@ static inline bool path_is_vendor_specific(uint8_t path_id)
 		path_id <= BT_HCI_DATAPATH_ID_VS_END);
 }
 
+#if defined(CONFIG_BT_ISO_BIS_RECV_SEND_DBG)
+__attribute__((optimize("O0")))
+#endif
 uint8_t ll_setup_iso_path(uint16_t handle, uint8_t path_dir, uint8_t path_id,
 			  uint8_t coding_format, uint16_t company_id,
 			  uint16_t vs_codec_id, uint32_t controller_delay,
@@ -235,6 +238,8 @@ uint8_t ll_setup_iso_path(uint16_t handle, uint8_t path_dir, uint8_t path_id,
 
 	ARG_UNUSED(controller_delay);
 	ARG_UNUSED(codec_config);
+
+	printk("~MT~ ll_setup_iso_path(handle=%u path=%u)\n", handle, path_dir); 
 
 	if (IS_ENABLED(CONFIG_BT_CTLR_CONN_ISO) && IS_CIS_HANDLE(handle)) {
 		struct ll_conn_iso_group *cig;
@@ -351,7 +356,17 @@ uint8_t ll_setup_iso_path(uint16_t handle, uint8_t path_dir, uint8_t path_id,
 		sync_iso = ull_sync_iso_by_stream_get(stream_handle);
 		lll_iso = &sync_iso->lll;
 
+#if !defined(CONFIG_BT_ISO_BIS_RECV_SEND)
 		role = ISOAL_ROLE_BROADCAST_SINK;
+#else /* CONFIG_BT_ISO_BIS_RECV_SEND */
+		if(path_dir == BT_HCI_DATAPATH_DIR_CTLR_TO_HOST) {
+			/* BIS receive */
+			role = ISOAL_ROLE_BROADCAST_SINK;
+		} else {
+			/* BIS send */
+			role = ISOAL_ROLE_BROADCAST_SOURCE;
+		}
+#endif /* !CONFIG_BT_ISO_BIS_RECV_SEND */	
 		iso_interval = lll_iso->iso_interval;
 		sdu_interval = lll_iso->sdu_interval;
 		burst_number = lll_iso->bn;
@@ -469,7 +484,11 @@ uint8_t ll_setup_iso_path(uint16_t handle, uint8_t path_dir, uint8_t path_id,
 
 #if defined(CONFIG_BT_CTLR_ADV_ISO) || defined(CONFIG_BT_CTLR_CONN_ISO)
 	} else if ((path_dir == BT_HCI_DATAPATH_DIR_HOST_TO_CTLR) &&
+#if !defined(CONFIG_BT_ISO_BIS_RECV_SEND)
 		   (cis || adv_stream)) {
+#else /* CONFIG_BT_ISO_BIS_RECV_SEND */
+		   sync_stream) {
+#endif /* !CONFIG_BT_ISO_BIS_RECV_SEND */			
 		isoal_source_handle_t source_handle;
 		isoal_status_t err;
 
@@ -511,10 +530,15 @@ uint8_t ll_setup_iso_path(uint16_t handle, uint8_t path_dir, uint8_t path_id,
 				cis->hdr.datapath_in = dp;
 			}
 
+#if !defined(CONFIG_BT_ISO_BIS_RECV_SEND)
 			if (IS_ENABLED(CONFIG_BT_CTLR_ADV_ISO) && adv_stream != NULL) {
 				adv_stream->dp = dp;
 			}
-
+#else /* CONFIG_BT_ISO_BIS_RECV_SEND */
+			if (IS_ENABLED(CONFIG_BT_CTLR_SYNC_ISO) && sync_stream != NULL) {
+				sync_stream->dp = dp;
+			}
+#endif /* !CONFIG_BT_ISO_BIS_RECV_SEND */
 			dp->source_hdl = source_handle;
 			isoal_source_enable(source_handle);
 		} else {
@@ -534,6 +558,9 @@ uint8_t ll_setup_iso_path(uint16_t handle, uint8_t path_dir, uint8_t path_id,
 	return BT_HCI_ERR_SUCCESS;
 }
 
+#if defined(CONFIG_BT_ISO_BIS_RECV_SEND_DBG)
+__attribute__((optimize("O0")))
+#endif
 uint8_t ll_remove_iso_path(uint16_t handle, uint8_t path_dir)
 {
 	/* If the Host issues this command with a Connection_Handle that does

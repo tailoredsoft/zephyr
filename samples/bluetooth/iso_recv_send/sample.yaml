@@ -1,7 +1,7 @@
 sample:
-  name: Bluetooth Synchronized Receiver
+  name: Bluetooth isochronous recv/send
 tests:
-  sample.bluetooth.iso_receive:
+  sample.bluetooth.iso_recv_send:
     harness: bluetooth
     platform_allow:
       - qemu_cortex_m3
@@ -11,7 +11,7 @@ tests:
     integration_platforms:
       - qemu_cortex_m3
     tags: bluetooth
-  sample.bluetooth.iso_receive.bt_ll_sw_split:
+  sample.bluetooth.iso_recv_send.bt_ll_sw_split:
     harness: bluetooth
     platform_allow:
       - qemu_cortex_m3

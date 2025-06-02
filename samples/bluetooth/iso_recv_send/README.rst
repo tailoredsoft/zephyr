@@ -1,27 +1,29 @@
-.. zephyr:code-sample:: bluetooth_isochronous_receiver
-   :name: Synchronized Receiver
+.. zephyr:code-sample:: bluetooth_iso_group_chat_core
+   :name: Synchronized Receive and Send BISes
    :relevant-api: bt_iso bluetooth
 
-   Use Bluetooth LE Synchronized Receiver functionality.
+   Core functionality enhancement to expedite Bluetooth LE Group Voice 
+   capability.
 
 Overview
 ********
 
-A simple application demonstrating the Bluetooth Low Energy Synchronized
-Receiver functionality.
+A simple application demonstrating that shows a LE Audio broadcast sink
+device receiving BIS1 and sending on BIS2.
 
 Requirements
 ************
 
-* BlueZ running on the host, or
-* A board with Bluetooth Low Energy 5.2 support
-* A Bluetooth Controller and board that supports setting
-  CONFIG_BT_CTLR_SYNC_ISO=y
+* Only tested on a Nordic Semiconductor nRF5280 DK, but should also work on
+  nRF5340 DK and nRF5340 Audio DK.
+* Requires a Bluetooth LE Audio capable controller appropriately enhanced
+  and host stack.
+* Only tested with the Nordic Semiconductor nRF52840 DK
 
 Building and Running
 ********************
 
-This sample can be found under :zephyr_file:`samples/bluetooth/iso_receive` in
+This sample can be found under :zephyr_file:`samples/bluetooth/iso_recv_send` in
 the Zephyr tree. Use ``-DEXTRA_CONF_FILE=overlay-bt_ll_sw_split.conf`` to enable
 required ISO feature support in Zephyr Bluetooth Controller on supported boards.
 
