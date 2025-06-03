@@ -392,8 +392,9 @@ static void iso_bis_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info
 	  The following code is used to print the received data from all BIS
 	  channels. 
 	  The data is expected to be in the format:
- 	   S< n:[s,m,c,l] n:[s,m,c,l] n:[s,m,c,l] n:[s,m,c,l] ...
+ 	   S d < n:[s,m,c,l] n:[s,m,c,l] n:[s,m,c,l] n:[s,m,c,l] ...
 		 where for each BIS channel ...
+		  d is the delta time in milliseconds since last print
 		  n is the BIS index 1..N as per the callback chan pointer
 		  s is the source id 1=Primary, 10..99=Secondary
 		  m is the source bis index in the payload
@@ -406,6 +407,38 @@ static void iso_bis_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info
 		return;
 	}
 	uint8_t index = bis_idx-1;
+
+	/* Enable the following code to print the timestamps of the first 
+	   few callbacks. Typical output will be 
+	   Log: 1:0 1:10000 1:2 1:10000 1:4294967295 1:10000 1:0 1:10000 1:0 1:10000
+	   where the 4294967295 implies that most likely the timestamp did not exist
+	   */	
+#if 0
+	#define LOG_DIFF_ARRAY_SIZE 12  //must be >=8
+	static bool log_enable = true;
+	static uint32_t log_idx=0;
+	static uint8_t log_bis_idx[LOG_DIFF_ARRAY_SIZE];
+	static uint32_t log_time_diff[LOG_DIFF_ARRAY_SIZE];
+	if(log_enable){
+		if(log_idx<LOG_DIFF_ARRAY_SIZE) {
+			/* log the bis_idx and time diff for this callback */
+			log_bis_idx[log_idx] = bis_idx;
+			//log_time_diff[log_idx] = k_uptime_get();
+			log_time_diff[log_idx] = info->ts;
+			log_idx++;
+		} 
+			
+		if(log_idx==LOG_DIFF_ARRAY_SIZE) {
+			/* if log is full then print it and reset */
+			printk("\nLog: ");
+			for(uint8_t i=1; i<LOG_DIFF_ARRAY_SIZE-1; i++) {
+				printk("%u:%u ", log_bis_idx[i], log_time_diff[i]-log_time_diff[i-1]);
+			}
+			printk("\n");
+			log_enable=false;
+		}
+	}
+#endif
 
 	/* Increment frame count if this is BIS1 as that is always the start of the frame*/
 	if(bis_idx==1){
@@ -421,9 +454,15 @@ static void iso_bis_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info
 		/* Print this BIS in format n:[s,m,c,l] */
 		uint8_t *payload = buf->data;
 	    
+		/* calculate the delta time since the last print */
+		static k_ticks_t old_ms = 0;
+		k_ticks_t now_ms = k_uptime_get();
+		k_ticks_t delta_ms = now_ms - old_ms;
+		old_ms = now_ms;
+
 		/* Print the current BIS number for this callback and a newline also if BIS1*/
 		if(bis_idx==1){
-			printk("\nS< %u:", bis_idx);
+			printk("\nS %u < %u:", (uint32_t)delta_ms, bis_idx);
 		} else {
 			printk(" %u:", bis_idx);
 		}

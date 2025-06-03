@@ -252,8 +252,9 @@ static void iso_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info *in
 	  The following code is used to print the received data from all BIS
 	  channels. 
 	  The data is expected to be in the format:
- 	   R< n:[s,m,c,l] n:[s,m,c,l] n:[s,m,c,l] n:[s,m,c,l] ...
+ 	   R d < n:[s,m,c,l] n:[s,m,c,l] n:[s,m,c,l] n:[s,m,c,l] ...
 		 where for each BIS channel ...
+		  d is the delta time in ms since last print
 		  n is the BIS index 1..N as per the callback chan pointer
 		  s is the source id 1=Primary, 10..99=Secondary
 		  m is the source bis index in the payload
@@ -281,9 +282,15 @@ static void iso_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info *in
 		/* Print this BIS in format n:[s,m,c,l] */
 		uint8_t *payload = buf->data;
 	    
+		/* calculate the delta time since the last print */
+		static k_ticks_t old_ms = 0;
+		k_ticks_t now_ms = k_uptime_get();
+		k_ticks_t delta_ms = now_ms - old_ms;
+		old_ms = now_ms;
+
 		/* Print the current BIS number for this callback and a newline also if BIS1*/
 		if(bis_idx==1){
-			printk("\nR< %u:", bis_idx);
+			printk("\nR %u < %u:", (uint32_t)delta_ms, bis_idx);
 		} else {
 			printk(" %u:", bis_idx);
 		}
