@@ -28,6 +28,13 @@ config BT_ISO_BIS_RECV_SEND_DBG
 	  application is using the group talk feature. The default is to
 	  not include this code in the stack, which saves some code space.
 
+config BT_ISO_FUNC_NO_OPTIMIZE_MASK
+	hex "Bitmask for enable/disable -O0 optimisation for functions"
+	default 0x00000000
+	help
+	  Default will leave all functions optimised as per default.
+	   Do a search to finf which bitmask controls which function.
+
 config ISO_PRINT_INTERVAL
 	int "Interval between each packet report"
 	range 1 360000

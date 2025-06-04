@@ -5896,7 +5896,7 @@ int hci_acl_handle(struct net_buf *buf, struct net_buf **evt)
 #endif /* CONFIG_BT_CONN */
 
 #if defined(CONFIG_BT_CTLR_ADV_ISO) || defined(CONFIG_BT_CTLR_CONN_ISO)
-#if defined(CONFIG_BT_ISO_BIS_RECV_SEND_DBG)
+#if CONFIG_BT_ISO_FUNC_NO_OPTIMIZE_MASK & 0x00000002
 __attribute__((optimize("O0")))
 #endif
 int hci_iso_handle(struct net_buf *buf, struct net_buf **evt)

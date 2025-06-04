@@ -214,7 +214,7 @@ static inline bool path_is_vendor_specific(uint8_t path_id)
 		path_id <= BT_HCI_DATAPATH_ID_VS_END);
 }
 
-#if defined(CONFIG_BT_ISO_BIS_RECV_SEND_DBG)
+#if CONFIG_BT_ISO_FUNC_NO_OPTIMIZE_MASK & 0x00000004
 __attribute__((optimize("O0")))
 #endif
 uint8_t ll_setup_iso_path(uint16_t handle, uint8_t path_dir, uint8_t path_id,
@@ -558,7 +558,7 @@ uint8_t ll_setup_iso_path(uint16_t handle, uint8_t path_dir, uint8_t path_id,
 	return BT_HCI_ERR_SUCCESS;
 }
 
-#if defined(CONFIG_BT_ISO_BIS_RECV_SEND_DBG)
+#if CONFIG_BT_ISO_FUNC_NO_OPTIMIZE_MASK & 0x00000004
 __attribute__((optimize("O0")))
 #endif
 uint8_t ll_remove_iso_path(uint16_t handle, uint8_t path_dir)

@@ -239,7 +239,7 @@ static void bt_iso_chan_add(struct bt_conn *iso, struct bt_iso_chan *chan)
 	LOG_DBG("iso %p chan %p", iso, chan);
 }
 
-#if defined(CONFIG_BT_ISO_BIS_RECV_SEND_DBG)
+#if CONFIG_BT_ISO_FUNC_NO_OPTIMIZE_MASK & 0x00000004
 __attribute__((optimize("O0")))
 #endif
 static int validate_iso_setup_data_path_parms(const struct bt_iso_chan *chan, uint8_t dir,
@@ -316,7 +316,7 @@ static int validate_iso_setup_data_path_parms(const struct bt_iso_chan *chan, ui
 	return 0;
 }
 
-#if defined(CONFIG_BT_ISO_BIS_RECV_SEND_DBG)
+#if CONFIG_BT_ISO_FUNC_NO_OPTIMIZE_MASK & 0x00000001
 __attribute__((optimize("O0")))
 #endif
 int bt_iso_setup_data_path(const struct bt_iso_chan *chan, uint8_t dir,
@@ -886,7 +886,7 @@ int conn_iso_send(struct bt_conn *conn, struct net_buf *buf, enum bt_iso_timesta
 	return 0;
 }
 
-#if defined(CONFIG_BT_ISO_BIS_RECV_SEND_DBG)
+#if CONFIG_BT_ISO_FUNC_NO_OPTIMIZE_MASK & 0x00000008
 __attribute__((optimize("O0")))
 #endif
 static int validate_send(const struct bt_iso_chan *chan, const struct net_buf *buf,
@@ -942,7 +942,7 @@ static int validate_send(const struct bt_iso_chan *chan, const struct net_buf *b
 	return 0;
 }
 
-#if defined(CONFIG_BT_ISO_BIS_RECV_SEND_DBG)
+#if CONFIG_BT_ISO_FUNC_NO_OPTIMIZE_MASK & 0x00000008
 __attribute__((optimize("O0")))
 #endif
 int bt_iso_chan_send(struct bt_iso_chan *chan, struct net_buf *buf, uint16_t seq_num)
@@ -3448,7 +3448,7 @@ static int hci_le_big_create_sync(const struct bt_le_per_adv_sync *sync, struct 
 	return err;
 }
 
-#if defined(CONFIG_BT_ISO_BIS_RECV_SEND_DBG)
+#if CONFIG_BT_ISO_FUNC_NO_OPTIMIZE_MASK & 0x00000004
 __attribute__((optimize("O0")))
 #endif
 int bt_iso_big_sync(struct bt_le_per_adv_sync *sync, struct bt_iso_big_sync_param *param,
