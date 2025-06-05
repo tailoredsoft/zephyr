@@ -222,6 +222,27 @@ uint8_t ll_big_sync_create(uint8_t big_handle, uint16_t sync_handle,
 		stream->big_handle = big_handle;
 		stream->bis_index = bis[i];
 		stream->dp = NULL;
+
+#if defined(CONFIG_BT_ISO_BIS_RECV_SEND)
+		/* In this mode of operation all BISes apart from the first is setup
+		   with a datapath for sending and not receiving. Hence we need to  
+		   allocate the fifos for all except the first one.
+		   The first BIS has bis_index == 1 and is used for receiving
+		   so it does not have a datapath allocated.
+		*/
+		__ASSERT_NO_MSG(stream->bis_index == i+1)
+		if(i>0) {
+			if (!stream->link_tx_free) {
+				stream->link_tx_free = &stream->link_tx;
+			}
+			memq_init(stream->link_tx_free, &stream->memq_tx.head,
+				&stream->memq_tx.tail);
+			stream->link_tx_free = NULL;
+
+			stream->pkt_seq_num = 0U;
+		} 
+#endif		
+
 		stream->test_mode = &test_mode[i];
 		memset(stream->test_mode, 0, sizeof(struct ll_iso_rx_test_mode));
 		lll->stream_handle[i] = sync_iso_stream_handle_get(stream);
@@ -391,6 +412,23 @@ void ull_sync_iso_stream_release(struct ll_sync_iso_set *sync_iso)
 		stream = ull_sync_iso_stream_get(stream_handle);
 		LL_ASSERT(stream);
 
+#if defined(CONFIG_BT_ISO_BIS_RECV_SEND)
+		/* In this mode of operation all BISes apart from the first is setup
+		   with a datapath for sending and not receiving so we need deallocate 
+		   the fifos that were setup at establishment time.
+		   The first BIS has bis_index == 1 and is used for receiving
+		   so it does not have a datapath allocated.
+		*/
+		memq_link_t *link;
+		if(stream->bis_index>1){
+			LL_ASSERT(!stream->link_tx_free);
+			link = memq_deinit(&stream->memq_tx.head,
+					&stream->memq_tx.tail);
+			LL_ASSERT(link);
+			stream->link_tx_free = link;
+		}		
+#endif		
+	
 		dp = stream->dp;
 		if (dp) {
 			stream->dp = NULL;

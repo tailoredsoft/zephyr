@@ -1680,6 +1680,9 @@ static bool isoal_is_time_stamp_valid(const struct isoal_source *source_ctx,
  * @param[in]  payload_size      Length of the data written to the PDU
  * @return     Error status of the operation
  */
+#if CONFIG_BT_ISO_FUNC_NO_OPTIMIZE_MASK & 0x00000020
+__attribute__((optimize("O0")))
+#endif
 static isoal_status_t isoal_tx_pdu_emit(const struct isoal_source *source_ctx,
 					const struct isoal_pdu_produced *produced_pdu,
 					const uint8_t pdu_ll_id,
