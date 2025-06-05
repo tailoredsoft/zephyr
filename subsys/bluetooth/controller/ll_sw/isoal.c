@@ -460,6 +460,9 @@ static isoal_status_t isoal_rx_allocate_sdu(struct isoal_sink *sink,
  *                    release on an error
  * @return            Status of operation
  */
+#if CONFIG_BT_ISO_FUNC_NO_OPTIMIZE_MASK & 0x00000020
+__attribute__((optimize("O0")))
+#endif
 static isoal_status_t isoal_rx_buffered_emit_sdu(struct isoal_sink *sink, bool end_of_sdu)
 {
 	struct isoal_emitted_sdu_frag sdu_frag;

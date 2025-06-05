@@ -137,7 +137,7 @@ End of sanity check of configs for this app.
    at the start of the line so that data is continuously sent on BIS2
 */
 #define CONFIGURE_BIS2_AS_SEND
-#define notENABLE_SEND_ON_BIS2
+#define ENABLE_SEND_ON_BIS2
 
 #define TIMEOUT_SYNC_CREATE K_SECONDS(10)
 #define NAME_LEN            30

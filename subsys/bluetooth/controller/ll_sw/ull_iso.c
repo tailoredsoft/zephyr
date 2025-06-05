@@ -1436,6 +1436,9 @@ void ll_iso_tx_mem_release(void *node_tx)
 	mem_release(node_tx, &mem_iso_tx.free);
 }
 
+#if CONFIG_BT_ISO_FUNC_NO_OPTIMIZE_MASK & 0x00000020
+__attribute__((optimize("O0")))
+#endif
 int ll_iso_tx_mem_enqueue(uint16_t handle, void *node_tx, void *link)
 {
 	if (IS_ENABLED(CONFIG_BT_CTLR_CONN_ISO) &&
@@ -1454,6 +1457,16 @@ int ll_iso_tx_mem_enqueue(uint16_t handle, void *node_tx, void *link)
 		stream = ull_adv_iso_stream_get(stream_handle);
 		memq_enqueue(link, node_tx, &stream->memq_tx.tail);
 
+#if defined(CONFIG_BT_ISO_BIS_RECV_SEND)
+	} else if (IS_ENABLED(CONFIG_BT_CTLR_SYNC_ISO) &&
+		   IS_SYNC_ISO_HANDLE(handle)) {
+		struct lll_sync_iso_stream *sync_stream;
+		uint16_t stream_handle;
+
+		stream_handle = LL_BIS_SYNC_IDX_FROM_HANDLE(handle);
+		sync_stream = ull_sync_iso_stream_get(stream_handle);
+		memq_enqueue(link, node_tx, &sync_stream->memq_tx.tail);
+#endif		
 	} else {
 		return -EINVAL;
 	}
@@ -1902,6 +1915,9 @@ static isoal_status_t ll_iso_pdu_write(struct isoal_pdu_buffer *pdu_buffer,
  * @param handle  CIS/BIS handle
  * @return        Error status of enqueue operation
  */
+#if CONFIG_BT_ISO_FUNC_NO_OPTIMIZE_MASK & 0x00000020
+__attribute__((optimize("O0")))
+#endif
 static isoal_status_t ll_iso_pdu_emit(struct node_tx_iso *node_tx,
 				      const uint16_t handle)
 {
