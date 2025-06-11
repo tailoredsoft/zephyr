@@ -5,6 +5,36 @@ source "Kconfig.zephyr"
 
 mainmenu "Bluetooth: ISO Receive"
 
+config BT_ISO_BIS_RECV_SEND
+	bool "Enable Send/Recv in a BIS for group talk"
+	default n
+	help
+	  This option enables code in the underlying stack to send and receive
+	  audio in a BIS for group talk. This is only needed if the application
+	  is using the group talk feature. The default is to not include this
+	  code in the stack, which saves some code space.
+	  If enabled, then the following MUST also be enabled in either file
+	  prj.conf or overlay-bt_ll_sw_split.conf:
+          CONFIG_BT_CTLR_SYNC_ISO=y
+          CONFIG_BT_CTLR_ADV_ISO=y
+
+
+config BT_ISO_BIS_RECV_SEND_DBG
+	bool "Enable Send/Recv related debug code and attributes"
+	default n
+	help
+	  Use this attribute to enable disable debug code and attributes
+	  related to the Send/Recv feature. This is only needed if the
+	  application is using the group talk feature. The default is to
+	  not include this code in the stack, which saves some code space.
+
+config BT_ISO_FUNC_NO_OPTIMIZE_MASK
+	hex "Bitmask for enable/disable -O0 optimisation for functions"
+	default 0x00000000
+	help
+	  Default will leave all functions optimised as per default.
+	   Do a search to finf which bitmask controls which function.
+
 config ISO_PRINT_INTERVAL
 	int "Interval between each packet report"
 	range 1 360000
