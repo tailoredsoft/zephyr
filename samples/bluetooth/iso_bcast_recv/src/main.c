@@ -25,6 +25,9 @@
 #endif
 /*============================================================================*/
 
+#define notCONFIGURE_BIS2_AS_RECV
+
+#define BIS_INDEX_INVALID        (0)
 #define BIG_SDU_INTERVAL_US      (10000)
 #define BUF_ALLOC_TIMEOUT_US     (BIG_SDU_INTERVAL_US * 2U) /* milliseconds */
 #define BIG_TERMINATE_TIMEOUT_US (CONFIG_BIG_TERMINATE_TIMEOUT_SECONDS * USEC_PER_SEC) 
@@ -41,10 +44,17 @@ static K_SEM_DEFINE(sem_iso_data, CONFIG_BT_ISO_TX_BUF_COUNT,
 
 #define INITIAL_TIMEOUT_COUNTER (BIG_TERMINATE_TIMEOUT_US / BIG_SDU_INTERVAL_US)
 
+/* converts iso chan pointer into to a bis_index in the range 1..N and o
+   deemed invalid using the pointer values to search in the bis array */
+uint8_t get_bis_idx(struct bt_iso_chan *chan);
+
+
 static uint16_t seq_num;
 static uint32_t iso_send_count=0U;
+static uint32_t     iso_frame_count; /* incremented once per iso interval */
+static uint32_t     iso_bis_lost_count[BIS_ISO_CHAN_COUNT];
 
-static void iso_connected(struct bt_iso_chan *chan)
+static void iso_bis_connected(struct bt_iso_chan *chan)
 {
 	const struct bt_iso_chan_path hci_path = {
 		.pid = BT_ISO_DATA_PATH_HCI,
@@ -54,33 +64,159 @@ static void iso_connected(struct bt_iso_chan *chan)
 
 	printk("ISO Channel %p connected\n", chan);
 
+	uint8_t bis_idx = get_bis_idx(chan);
+	if(bis_idx == BIS_INDEX_INVALID) {
+		printk("Invalid BIS channel %p (index %u)\n", chan, bis_idx);
+		return;
+	}
+
 	seq_num = 0U;
 	iso_send_count=0U;
 
+	uint8_t dir=BT_HCI_DATAPATH_DIR_HOST_TO_CTLR; /* assume tx bis */
+#if defined(CONFIGURE_BIS2_AS_RECV)	
+	if(bis_idx>1){
+		/* BIS2 and onwards are always RX */
+		dir = BT_HCI_DATAPATH_DIR_CTLR_TO_HOST;
+	} 
+#endif	
 	err = bt_iso_setup_data_path(chan, BT_HCI_DATAPATH_DIR_HOST_TO_CTLR, &hci_path);
 	if (err != 0) {
-		printk("Failed to setup ISO TX data path: %d\n", err);
+		if(dir == BT_HCI_DATAPATH_DIR_CTLR_TO_HOST) {
+			printk("Failed to setup ISO RX data path: %d\n", err);
+		} else {
+			printk("Failed to setup ISO TX data path: %d\n", err);
+		}
+	} else {
+			printk("  Set BIS%u datapath = ", bis_idx);
+		if(dir == BT_HCI_DATAPATH_DIR_CTLR_TO_HOST) {
+			printk("RECV\n");
+		} else {
+			printk("SEND\n");
+		}
 	}
+
+	iso_frame_count=0;
 
 	k_sem_give(&sem_big_cmplt);
 }
 
-static void iso_disconnected(struct bt_iso_chan *chan, uint8_t reason)
+static void iso_bis_disconnected(struct bt_iso_chan *chan, uint8_t reason)
 {
 	printk("ISO Channel %p disconnected with reason 0x%02x\n",
 	       chan, reason);
 	k_sem_give(&sem_big_term);
 }
 
-static void iso_sent(struct bt_iso_chan *chan)
+static void iso_bis_sent(struct bt_iso_chan *chan)
 {
+	uint8_t bis_idx = get_bis_idx(chan);
+	if(bis_idx == BIS_INDEX_INVALID) {
+		printk("Invalid BIS channel %p (index %u)\n", chan, bis_idx);
+		return;
+	}
+
+	/* Increment frame count if this is BIS1 as that is always the start of the frame*/
+	if(bis_idx==1){
+		iso_frame_count++;
+	}
+
 	k_sem_give(&sem_iso_data);
 }
 
+static void iso_bis_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info *info,
+		struct net_buf *buf)
+{
+	/*
+	  The following code is used to print the received data from all BIS
+	  channels. 
+	  The data is expected to be in the format:
+ 	   S d < n:[s,m,c,l] n:[s,m,c,l] n:[s,m,c,l] n:[s,m,c,l] ...
+		 where for each BIS channel ...
+		  d is the delta time in milliseconds since last print
+		  n is the BIS index 1..N as per the callback chan pointer
+		  s is the source id 1=Primary, 10..99=Secondary
+		  m is the source bis index in the payload
+		  c is the packet count provided by source in the payload
+		  l is the packet lost count for this bis channel 'n' since last print
+	*/
+	uint8_t bis_idx = get_bis_idx(chan);
+	if(bis_idx == BIS_INDEX_INVALID) {
+		printk("Invalid BIS channel %p (index %u)\n", chan, bis_idx);
+		return;
+	}
+	uint8_t index = bis_idx-1;
+
+	/* Enable the following code to print the timestamps of the first 
+	   few callbacks. Typical output will be 
+	   Log: 1:0 1:10000 1:2 1:10000 1:4294967295 1:10000 1:0 1:10000 1:0 1:10000
+	   where the 4294967295 implies that most likely the timestamp did not exist
+	   */	
+#if 0
+	#define LOG_DIFF_ARRAY_SIZE 12  //must be >=8
+	static bool log_enable = true;
+	static uint32_t log_idx=0;
+	static uint8_t log_bis_idx[LOG_DIFF_ARRAY_SIZE];
+	static uint32_t log_time_diff[LOG_DIFF_ARRAY_SIZE];
+	if(log_enable){
+		if(log_idx<LOG_DIFF_ARRAY_SIZE) {
+			/* log the bis_idx and time diff for this callback */
+			log_bis_idx[log_idx] = bis_idx;
+			//log_time_diff[log_idx] = k_uptime_get();
+			log_time_diff[log_idx] = info->ts;
+			log_idx++;
+		} 
+			
+		if(log_idx==LOG_DIFF_ARRAY_SIZE) {
+			/* if log is full then print it and reset */
+			printk("\nLog: ");
+			for(uint8_t i=1; i<LOG_DIFF_ARRAY_SIZE-1; i++) {
+				printk("%u:%u ", log_bis_idx[i], log_time_diff[i]-log_time_diff[i-1]);
+			}
+			printk("\n");
+			log_enable=false;
+		}
+	}
+#endif
+
+	/* if invalid packet then increment appropriate count*/
+	if((info->flags & BT_ISO_FLAGS_VALID)==0) {
+		iso_bis_lost_count[index]++;
+	}
+
+	if ((iso_frame_count % CONFIG_ISO_PRINT_INTERVAL) == 0) {
+		/* Print this BIS in format n:[s,m,c,l] */
+		uint8_t *payload = buf->data;
+	    
+		/* calculate the delta time since the last print */
+		static k_ticks_t old_ms = 0;
+		k_ticks_t now_ms = k_uptime_get();
+		k_ticks_t delta_ms = now_ms - old_ms;
+		old_ms = now_ms;
+
+		/* Print the current BIS number for this callback and a newline also if BIS1*/
+		if(bis_idx==1){
+			printk("\nS %u < %u:", (uint32_t)delta_ms, bis_idx);
+		} else {
+			printk(" %u:", bis_idx);
+		}
+		/* print data if valid in this callback */
+		if(info->flags & BT_ISO_FLAGS_VALID){
+			uint32_t count = *(uint32_t *)&payload[0];
+			printk("[%u,%u,%u,%u]", payload[4], payload[5], count, iso_bis_lost_count[index]);
+		} else {
+			printk("[-,-,-,%u]", iso_bis_lost_count[index]);
+		}
+		/* reset the lost count for this BIS channel */
+		iso_bis_lost_count[index]=0;
+	}
+}
+
 static struct bt_iso_chan_ops iso_ops = {
-	.connected	= iso_connected,
-	.disconnected	= iso_disconnected,
-	.sent           = iso_sent,
+	.recv		    = iso_bis_recv,
+	.connected	    = iso_bis_connected,
+	.disconnected	= iso_bis_disconnected,
+	.sent           = iso_bis_sent,
 };
 
 static struct bt_iso_chan_io_qos iso_tx_qos = {
@@ -117,6 +253,25 @@ static struct bt_iso_big_create_param big_create_param = {
 static const struct bt_data ad[] = {
 	BT_DATA(BT_DATA_NAME_COMPLETE, CONFIG_BT_DEVICE_NAME, sizeof(CONFIG_BT_DEVICE_NAME) - 1),
 };
+
+uint8_t get_bis_idx(struct bt_iso_chan *chan)
+{
+	/* valid bis index values are 1 .. CONFIG_BT_ISO_MAX_CHAN*/
+#if 1  //MJT_HACK delete this when  group voive talk works
+	if(chan) {
+		if(chan->bis_index > 0 && chan->bis_index <= BIS_ISO_CHAN_COUNT) {
+			return chan->bis_index;
+		}
+	}
+#else
+	for(int i=0; i<BIS_ISO_CHAN_COUNT;i++){
+		if(bis[i] == chan){
+			return i+1;
+		}
+	}
+#endif		
+	return BIS_INDEX_INVALID;
+}
 
 int main(void)
 {
