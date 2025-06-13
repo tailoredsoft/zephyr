@@ -25,7 +25,7 @@
 #endif
 /*============================================================================*/
 
-#define notCONFIGURE_BIS2_AS_RECV
+#define CONFIGURE_BIS2_AS_RECV
 
 #define BIS_INDEX_INVALID        (0)
 #define BIG_SDU_INTERVAL_US      (10000)
@@ -124,6 +124,7 @@ static void iso_bis_sent(struct bt_iso_chan *chan)
 	k_sem_give(&sem_iso_data);
 }
 
+#if defined(CONFIGURE_BIS2_AS_RECV)	
 static void iso_bis_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info *info,
 		struct net_buf *buf)
 {
@@ -211,13 +212,27 @@ static void iso_bis_recv(struct bt_iso_chan *chan, const struct bt_iso_recv_info
 		iso_bis_lost_count[index]=0;
 	}
 }
+#endif
 
 static struct bt_iso_chan_ops iso_ops = {
+#if defined(CONFIGURE_BIS2_AS_RECV)	
 	.recv		    = iso_bis_recv,
+#endif	
 	.connected	    = iso_bis_connected,
 	.disconnected	= iso_bis_disconnected,
 	.sent           = iso_bis_sent,
 };
+
+#if defined(CONFIGURE_BIS2_AS_RECV)	
+static struct bt_iso_chan_io_qos iso_rx_qos = {
+	0 /* will be updated when sync'd */
+};
+
+static struct bt_iso_chan_qos bis_iso_qos_rx = {
+	.rx = &iso_rx_qos,
+};
+
+#endif	
 
 static struct bt_iso_chan_io_qos iso_tx_qos = {
 	.sdu = CONFIG_BT_ISO_TX_MTU, /* bytes */
@@ -231,7 +246,11 @@ static struct bt_iso_chan_qos bis_iso_qos = {
 
 static struct bt_iso_chan bis_iso_chan[] = {
 	{ .ops = &iso_ops, .qos = &bis_iso_qos, },
+#if defined(CONFIGURE_BIS2_AS_RECV)	
+	{ .ops = &iso_ops, .qos = &bis_iso_qos_rx, },
+#else
 	{ .ops = &iso_ops, .qos = &bis_iso_qos, },
+#endif	
 };
 
 static struct bt_iso_chan *bis[] = {
@@ -257,19 +276,11 @@ static const struct bt_data ad[] = {
 uint8_t get_bis_idx(struct bt_iso_chan *chan)
 {
 	/* valid bis index values are 1 .. CONFIG_BT_ISO_MAX_CHAN*/
-#if 1  //MJT_HACK delete this when  group voive talk works
 	if(chan) {
 		if(chan->bis_index > 0 && chan->bis_index <= BIS_ISO_CHAN_COUNT) {
 			return chan->bis_index;
 		}
 	}
-#else
-	for(int i=0; i<BIS_ISO_CHAN_COUNT;i++){
-		if(bis[i] == chan){
-			return i+1;
-		}
-	}
-#endif		
 	return BIS_INDEX_INVALID;
 }
 
